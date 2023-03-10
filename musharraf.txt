@@ -1,0 +1,49 @@
+1) p9_user nomli rol yarating, unga login va createdb ruxsatlarini bering
+
+create role p9_user login createdb password '1';
+
+
+2) p9_group_exam_db nomli database yarating uning egasi p9_user bolsin.
+
+create database p9_group_exam_db;
+create user p9_user;
+alter database p9_group_exam_db owner to p9_user;
+
+
+
+3) users nomli table yarating, name, age, phone larni kiriting, phone unique bolsin
+
+create table if not exists users (
+    id serial primary key,
+    name varchar(255) not null,
+    age integer not null,
+    phone varchar(25) not null unique
+)
+
+
+
+4) 50,000 tadan ko'p malumotni users table ga qoshilsin
+
+create or replace function generate_name()
+returns text as
+$$
+declare
+	arr text;
+begin
+   SELECT array_to_string(ARRAY(SELECT chr((77 + round(random() * 23)) :: integer) into arr FROM generate_series(1,15)), '');
+   return arr;
+end;
+$$ language plpgsql;
+
+insert into users(name,age,phone)
+select generate_name() as name,round(random()*80) as age,"left"((round(random()*99999999999)+ round(random()*100000000))::text,9)::int as phone from generate_series(0,50020)
+on conflict (phone) do update set phone = excluded.phone::int + round(random()*100000)::int;
+
+5) users table uchun phone va name uchun index yarating
+
+create index indexll on users(name,phone);
+
+
+
+
+
